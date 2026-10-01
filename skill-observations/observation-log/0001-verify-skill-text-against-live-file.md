@@ -1,23 +1,32 @@
 ---
 id: 1
-title: "Review findings must be verified against the live file, not the injected prompt text"
+title: "Review a command from its source file, not from the expanded prompt"
 status: open
 type: open-source
-skill: []
+skill: [task-observer]
 proposes_skill: []
 target_file: []
-siblings_checked: "no family registry exists; generic review practice, checked - no propagation"
-area: "reviewing an existing skill or command"
+siblings_checked: "none — no skill-families registry exists in this workspace"
+area: "skill/command review procedure"
 date: 2026-10-01
-session_context: "Reviewing a Slack report command; the invoked text differed from the repo file"
+session_context: "Reviewing the /29cm slash command at the user's request (koyu repo)"
 parked_until:
 resolved:
 resolution:
 reference:
 ---
 
-**Issue:** A review reported a bug ("literal replacement string in a regex") read from the prompt text injected when the command was invoked. The checked-in file held the correct replacement; the injected copy differed. The finding was wrong and was only caught when the file was opened to edit it.
+**Issue:** While reviewing the /29cm command I read the text injected into the
+prompt and found the JS replacement `'검사'`. Grepping the source file showed
+`'$1'` instead, which looked like a false finding. The real cause: Claude Code
+substitutes positional arguments (`$0`, `$1`, …) into command files at
+invocation, so the args "스킬 검사" rewrote a regex backreference in code. The
+expanded prompt and the source differ, and neither alone explains the defect.
 
-**Suggested improvement:** Before reporting any defect in a skill or command, locate the file on disk and confirm the finding there. Label findings from injected text only as "unverified".
+**Suggested improvement:** When reviewing a slash command or skill, diff the
+expanded prompt against the source file on disk. Any difference is itself a
+finding (argument substitution, templating). Add a lint check: no `$<digit>`
+in command files that contain code.
 
-**Principle:** The text a harness injects is a copy of the artefact, not the artefact. Verify against the source of truth before reporting a defect, and say which one was read.
+**Principle:** A templated artefact has two versions, source and rendered.
+Review both and treat the difference between them as evidence.
